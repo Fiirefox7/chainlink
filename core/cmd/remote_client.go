@@ -615,24 +615,22 @@ func (cli *Client) deserializeAPIResponse(resp *http.Response, dst interface{}, 
 	return nil
 }
 
+// parseErrorResponseBody parses response body from web API and returns a single string containing all errors
 func parseErrorResponseBody(responseBody []byte) (string, error) {
-	type errorDetail struct {
-		Detail string `json:"detail"`
+
+	if responseBody == nil {
+		return "Empty error message", nil
 	}
 
-	type errorResp struct {
-		Errors []errorDetail `json:"errors"`
-	}
-
-	data := errorResp{}
-	err := json.Unmarshal(responseBody, &data)
+	var errors models.JSONAPIErrors
+	err := json.Unmarshal(responseBody, &errors)
 	if err != nil {
 		return "", err
 	}
 
-	errorDetails := make([]string, len(data.Errors))
+	errorDetails := make([]string, len(errors.Errors))
 
-	for _, errorDetail := range data.Errors {
+	for _, errorDetail := range errors.Errors {
 		errorDetails = append(errorDetails, errorDetail.Detail)
 	}
 
@@ -652,7 +650,7 @@ func parseResponse(resp *http.Response) ([]byte, error) {
 		if err != nil {
 			return b, errors.New("Error")
 		}
-		return b, errors.New(errorMessage)
+		return b, errors.New("Error: " + errorMessage)
 	}
 	return b, err
 }
