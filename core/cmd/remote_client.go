@@ -617,7 +617,6 @@ func (cli *Client) deserializeAPIResponse(resp *http.Response, dst interface{}, 
 
 // parseErrorResponseBody parses response body from web API and returns a single string containing all errors
 func parseErrorResponseBody(responseBody []byte) (string, error) {
-
 	if responseBody == nil {
 		return "Empty error message", nil
 	}
@@ -650,7 +649,7 @@ func parseResponse(resp *http.Response) ([]byte, error) {
 		if err != nil {
 			return b, err
 		}
-		return b, errors.New("Error: " + errorMessage)
+		return b, errors.New(errorMessage)
 	}
 	return b, err
 }
