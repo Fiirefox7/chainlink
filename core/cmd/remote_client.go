@@ -615,6 +615,30 @@ func (cli *Client) deserializeAPIResponse(resp *http.Response, dst interface{}, 
 	return nil
 }
 
+func parseErrorResponseBody(responseBody []byte) (string, error) {
+	type errorDetail struct {
+		Detail string `json:"detail"`
+	}
+
+	type errorResp struct {
+		Errors []errorDetail `json:"errors"`
+	}
+
+	data := errorResp{}
+	err := json.Unmarshal(responseBody, &data)
+	if err != nil {
+		return "", err
+	}
+
+	errorDetails := make([]string, len(data.Errors))
+
+	for _, errorDetail := range data.Errors {
+		errorDetails = append(errorDetails, errorDetail.Detail)
+	}
+
+	return strings.Join(errorDetails, "\n"), nil
+}
+
 func parseResponse(resp *http.Response) ([]byte, error) {
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -623,7 +647,12 @@ func parseResponse(resp *http.Response) ([]byte, error) {
 	if resp.StatusCode == http.StatusUnauthorized {
 		return b, errUnauthorized
 	} else if resp.StatusCode >= http.StatusBadRequest {
-		return b, errors.New("Error")
+		errorMessage, err := parseErrorResponseBody(b)
+
+		if err != nil {
+			return b, errors.New("Error")
+		}
+		return b, errors.New(errorMessage)
 	}
 	return b, err
 }
