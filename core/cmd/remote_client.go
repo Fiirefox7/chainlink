@@ -648,7 +648,7 @@ func parseResponse(resp *http.Response) ([]byte, error) {
 		errorMessage, err := parseErrorResponseBody(b)
 
 		if err != nil {
-			return b, errors.New("Error")
+			return b, err
 		}
 		return b, errors.New("Error: " + errorMessage)
 	}
